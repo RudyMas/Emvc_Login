@@ -1,6 +1,6 @@
 <?php
 
-namespace Library;
+namespace RudyMas\Emvc_Login;
 
 use RudyMas\Manipulator\Text;
 use RudyMas\PDOExt\DBconnect;
