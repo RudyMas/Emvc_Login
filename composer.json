@@ -1,0 +1,26 @@
+{
+  "name": "rudymas/emvc_login",
+  "description": "PHP class Emvc_Login for the EasyMVC Framework",
+  "version": "2.4.0",
+  "type": "library",
+  "license": "GPL-3.0",
+  "authors": [
+    {
+      "name": "Rudy Mas",
+      "email": "rudy.mas@rmsoft.be",
+      "homepage": "http://www.rmsoft.be",
+      "role": "Developer"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">= 7.1",
+    "rudymas/pdo-ext": "*",
+    "rudymas/manipulator": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "RudyMas\\Emvc_Login\\": "src/"
+    }
+  }
+}
