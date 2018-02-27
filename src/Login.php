@@ -1,6 +1,6 @@
 <?php
 
-namespace RudyMas\Emvc_Login;
+namespace EasyMVC\Login;
 
 use RudyMas\Manipulator\Text;
 use RudyMas\PDOExt\DBconnect;
@@ -26,9 +26,9 @@ use RudyMas\PDOExt\DBconnect;
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
  * @version     2.4.0
- * @package     Library
+ * @package     EasyMVC\Login
  */
-class Emvc_Login
+class Login
 {
     public $data, $errorCode;
     private $db, $text, $emailLogin;
@@ -356,4 +356,4 @@ class Emvc_Login
     }
 }
 
-/** End of File: Emvc_Login.php **/
+/** End of File: Login.php **/
