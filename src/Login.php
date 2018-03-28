@@ -10,12 +10,12 @@ use RudyMas\PDOExt\DBconnect;
  *
  * In the MySQL table 'emvc_users' you only need to add 6 fixed fields:
  * - id             = int : Is the index for the table (auto_increment)
- * - username       = varchar(40) : The login username
- * - email          = varchar(70) : The login e-mail
- * - password       = varchar(64) : The login password (Hashed with SHA256)
- * - salt           = varchar(20) : Used for extra security
- * - remember_me    = varchar(40) : Special password to automatically login
- * - remember_me_ip = varchar(45) : The IP from where the user can login automatically (Can be an IPv4 or IPv6 address)
+ * - username       = varchar(40)  : The login username
+ * - email          = varchar(70)  : The login e-mail
+ * - password       = varchar(255) : The login password (Hashed with SHA256)
+ * - salt           = varchar(32)  : Used for extra security
+ * - remember_me    = varchar(40)  : Special password to automatically login
+ * - remember_me_ip = varchar(45)  : The IP from where the user can login automatically (Can be an IPv4 or IPv6 address)
  *
  * For security purposes, the users will only be able to automatically login as long as they are working with the same
  * IP-address. If the IP-address changes, the user needs to login again.
@@ -25,7 +25,7 @@ use RudyMas\PDOExt\DBconnect;
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     2.4.0
+ * @version     3.0.0
  * @package     EasyMVC\Login
  */
 class Login
@@ -68,21 +68,14 @@ class Login
      */
     public function loginUser(string $userLogin, string $password, bool $remember = false): bool
     {
-        if ($this->emailLogin) {
-            $query = "SELECT *
-                      FROM emvc_users
-                      WHERE email = {$this->db->cleanSQL($userLogin)}
-                        OR username = {$this->db->cleanSQL($userLogin)}";
-        } else {
-            $query = "SELECT *
-                      FROM emvc_users
-                      WHERE username = {$this->db->cleanSQL($userLogin)}";
-        }
+        $query = "SELECT *
+                  FROM emvc_users
+                  WHERE username = {$this->db->cleanSQL($userLogin)}";
+        if ($this->emailLogin) $query .= " OR email = {$this->db->cleanSQL($userLogin)}";
         $this->db->query($query);
         if ($this->db->rows != 0) {
             $this->db->fetch(0);
-            $sha256Password = hash('sha256', $password . $this->db->data['salt']);
-            if ($sha256Password == $this->db->data['password']) {
+            if (password_verify($password . $this->db->data['salt'], $this->db->data['password'])) {
                 setcookie('login', $userLogin, time() + (30 * 24 * 3600), '/');
                 if ($remember === true) {
                     $this->data['remember_me'] = $this->text->randomText(40);
@@ -90,7 +83,7 @@ class Login
                     $this->updateUser($userLogin);
                     setcookie('remember_me', $this->data['remember_me'], time() + (30 * 24 * 3600), '/');
                 } else {
-                    $_SESSION['password'] = $sha256Password;
+                    $_SESSION['password'] = base64_encode($password . $this->db->data['salt']);
                     $_SESSION['IP'] = $this->getIP();
                 }
                 $this->setData();
@@ -116,27 +109,27 @@ class Login
             $password = $_COOKIE['remember_me'];
             $remember = true;
         } elseif (isset($_SESSION['password']) && isset($_SESSION['IP'])) {
-            $password = $_SESSION['password'];
+            $password = base64_decode($_SESSION['password']);
             $IP = $_SESSION['IP'];
         }
         if ($userLogin != '' && $password != '') {
-            if ($this->emailLogin) {
-                $query = "SELECT *
-                          FROM emvc_users
-                          WHERE email = {$this->db->cleanSQL($userLogin)}
-                            OR username = {$this->db->cleanSQL($userLogin)}";
-            } else {
-                $query = "SELECT *
-                          FROM emvc_users
-                          WHERE username = {$this->db->cleanSQL($userLogin)}";
-            }
+            $query = "SELECT * 
+                      FROM emvc_users
+                      WHERE username = {$this->db->cleanSQL($userLogin)}";
+            if ($this->emailLogin) $query .= " OR email = {$this->db->cleanSQL($userLogin)}";
             $this->db->query($query);
             if ($this->db->rows != 0) {
                 $this->db->fetch(0);
-                if ($password == ($remember) ? $this->db->data['remember_me'] : $this->db->data['password']) {
+                if (($remember) ? $password == $this->db->data['remember_me'] : password_verify($password, $this->db->data['password'])) {
                     if ($remember) $IP = $this->db->data['remember_me_ip'];
                     if ($IP == $this->getIP()) {
-                        $this->setData();
+                        if (password_needs_rehash($this->db->data['password'], PASSWORD_BCRYPT)) {
+                            $this->db->data['password'] = password_hash($password, PASSWORD_BCRYPT);
+                            $this->setData();
+                            $this->updateUser();
+                        } else {
+                            $this->setData();
+                        }
                         return true;
                     } else {
                         $this->data = [];
@@ -170,18 +163,15 @@ class Login
         $nameField = [];
         if (!isset($this->data['username'])) $this->data['username'] = 'Not Used';
         if (!isset($this->data['email'])) $this->data['email'] = 'No Email Address';
-        $this->data['salt'] = $this->text->randomText(20);
+        $this->data['salt'] = $this->text->randomText(32);
         $this->data['remember_me'] = '';
         $this->data['remember_me_ip'] = '';
 
+        $query = "SELECT id FROM emvc_users";
         if ($this->emailLogin) {
-            $query = "SELECT id
-                      FROM emvc_users
-                      WHERE email = {$this->db->cleanSQL($this->data['email'])}";
+            $query .= " WHERE email = {$this->db->cleanSQL($this->data['email'])}";
         } else {
-            $query = "SELECT id
-                      FROM emvc_users
-                      WHERE username = {$this->db->cleanSQL($this->data['username'])}";
+            $query .= " WHERE username = {$this->db->cleanSQL($this->data['username'])}";
         }
         $this->db->query($query);
         if ($this->db->rows != 0) {
@@ -212,7 +202,7 @@ class Login
         for ($x = 2; $x < $numberOfFields; $x++) {
             $query .= ", ";
             if ($nameField[$x] == 'password') {
-                $password = hash('sha256', $this->data['password'] . $this->data['salt']);
+                $password = password_hash($this->data['password'] . $this->data['salt'], PASSWORD_BCRYPT);
                 $query .= $this->db->cleanSQL($password);
             } else {
                 if (!isset($this->data[$nameField[$x]])) $this->data[$nameField[$x]] = '';
@@ -220,8 +210,8 @@ class Login
             }
         }
         $query .= ")";
-
         $this->db->insert($query);
+
         if ($this->emailLogin) {
             $loginResult = $this->loginUser($this->data['email'], $this->data['password']);
         } else {
@@ -247,10 +237,10 @@ class Login
         $query = "UPDATE emvc_users SET ";
         foreach ($this->data as $key => $value) {
             if ($key != 'id') {
-                $query .= "{$key} = {$this->db->cleanSQL($value)}, ";
+                $query .= "{$key} = {$this->db->cleanSQL($value)},";
             }
         }
-        $query = substr($query, 0, -2);
+        $query = rtrim($query, ',');
         if ($this->emailLogin) {
             $query .= " WHERE email = {$this->db->cleanSQL($userLogin)}";
         } else {
@@ -267,11 +257,14 @@ class Login
      */
     public function updatePassword(string $oldPassword, string $newPassword): bool
     {
-        $sha256Password = hash('sha256', $oldPassword . $this->db->data['salt']);
-        if ($this->data['password'] == $sha256Password) {
-            $this->data['salt'] = $this->text->randomText(20);
-            $this->data['password'] = hash('sha256', $newPassword . $this->data['salt']);
-            $this->updateUser($this->data['username']);
+        if (password_verify($oldPassword . $this->data['salt'], $this->data['password'])) {
+            $this->data['salt'] = $this->text->randomText(32);
+            $this->data['password'] = password_hash($newPassword . $this->data['salt'], PASSWORD_BCRYPT);
+            if ($this->emailLogin) {
+                $this->updateUser($this->data['email']);
+            } else {
+                $this->updateUser($this->data['username']);
+            }
             return true;
         } else {
             return false;
@@ -284,14 +277,11 @@ class Login
      */
     public function resetPassword(string $login): mixed
     {
+        $query = "SELECT * FROM emvc_users";
         if ($this->emailLogin) {
-            $query = "SELECT *
-                  FROM emvc_users
-                  WHERE Email = {$this->db->cleanSQL($login)}";
+            $query .= " WHERE Email = {$this->db->cleanSQL($login)}";
         } else {
-            $query = "SELECT *
-                      FROM emvc_uers
-                      WHERE username = {$this->db->cleanSQL($login)}";
+            $query .= " WHERE username = {$this->db->cleanSQL($login)}";
         }
         $this->db->queryRow($query);
         if ($this->db->rows == 0) return false;
@@ -313,8 +303,8 @@ class Login
                   WHERE remember_me = {$this->db->cleanSQL($remember_me)}";
         $this->db->queryRow($query);
         $this->setData();
-        $this->data['salt'] = $this->text->randomText(20);
-        $this->data['password'] = hash('sha256', $password . $this->data['salt']);
+        $this->data['salt'] = $this->text->randomText(32);
+        $this->data['password'] = password_hash($password . $this->data['salt'], PASSWORD_BCRYPT);
         $this->data['remember_me'] = '';
         if ($this->emailLogin) {
             $this->updateUser($this->data['email']);

@@ -1,7 +1,7 @@
 {
   "name": "easymvc/login",
   "description": "PHP Class Login for the EasyMVC Framework",
-  "version": "2.4.0",
+  "version": "3.0.0",
   "type": "library",
   "license": "GPL-3.0",
   "authors": [
@@ -19,6 +19,9 @@
     "rudymas/manipulator": "*"
   },
   "autoload": {
+    "classmap": [
+      "src/"
+    ],
     "psr-4": {
       "EasyMVC\\Login\\": "src/"
     }
