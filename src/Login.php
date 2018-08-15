@@ -26,7 +26,7 @@ use RudyMas\PDOExt\DBconnect;
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.0.0.40
+ * @version     4.0.1.41
  * @package     EasyMVC\Login
  */
 class Login
@@ -279,7 +279,7 @@ class Login
      * @param string $login
      * @return mixed
      */
-    public function resetPassword(string $login): mixed
+    public function resetPassword(string $login)
     {
         $query = "SELECT * FROM emvc_users";
         if ($this->emailLogin) {
