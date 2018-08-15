@@ -20,18 +20,22 @@ use RudyMas\PDOExt\DBconnect;
  * For security purposes, the users will only be able to automatically login as long as they are working with the same
  * IP-address. If the IP-address changes, the user needs to login again.
  *
- * All the extra fields you add to the emvc_users table can be accessed by using $login->data['...']
+ * You can add other fields to the table, and these can be accessed through ->getData(<key>)
+ * and changed by ->setData(<key>, <value>)
  *
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     3.0.0
+ * @version     4.0.0.40
  * @package     EasyMVC\Login
  */
 class Login
 {
-    public $data, $errorCode;
-    private $db, $text, $emailLogin;
+    public $errorCode;
+    private $db;
+    private $text;
+    private $emailLogin;
+    private $data = [];
 
     /**
      * Login constructor.
@@ -79,14 +83,14 @@ class Login
                 setcookie('login', $userLogin, time() + (30 * 24 * 3600), '/');
                 if ($remember === true) {
                     $this->data['remember_me'] = $this->text->randomText(40);
-                    $this->data['remember_me_ip'] = $this->getIP();
+                    $this->data['remember_me_ip'] = $this->fetchIP();
                     $this->updateUser($userLogin);
                     setcookie('remember_me', $this->data['remember_me'], time() + (30 * 24 * 3600), '/');
                 } else {
                     $_SESSION['password'] = base64_encode($password . $this->db->data['salt']);
-                    $_SESSION['IP'] = $this->getIP();
+                    $_SESSION['IP'] = $this->fetchIP();
                 }
-                $this->setData();
+                $this->translateData();
                 return true;
             } else {
                 return false;
@@ -122,13 +126,13 @@ class Login
                 $this->db->fetch(0);
                 if (($remember) ? $password == $this->db->data['remember_me'] : password_verify($password, $this->db->data['password'])) {
                     if ($remember) $IP = $this->db->data['remember_me_ip'];
-                    if ($IP == $this->getIP()) {
+                    if ($IP == $this->fetchIP()) {
                         if (password_needs_rehash($this->db->data['password'], PASSWORD_BCRYPT)) {
                             $this->db->data['password'] = password_hash($password, PASSWORD_BCRYPT);
-                            $this->setData();
+                            $this->translateData();
                             $this->updateUser();
                         } else {
-                            $this->setData();
+                            $this->translateData();
                         }
                         return true;
                     } else {
@@ -285,7 +289,7 @@ class Login
         }
         $this->db->queryRow($query);
         if ($this->db->rows == 0) return false;
-        $this->setData();
+        $this->translateData();
         $output = $this->data['remember_me'] = $this->text->randomText(15);
         $this->updateUser($login);
         $this->logoutUser();
@@ -302,7 +306,7 @@ class Login
                   FROM emvc_users
                   WHERE remember_me = {$this->db->cleanSQL($remember_me)}";
         $this->db->queryRow($query);
-        $this->setData();
+        $this->translateData();
         $this->data['salt'] = $this->text->randomText(32);
         $this->data['password'] = password_hash($password . $this->data['salt'], PASSWORD_BCRYPT);
         $this->data['remember_me'] = '';
@@ -316,7 +320,7 @@ class Login
     /**
      * @return string
      */
-    private function getIP(): string
+    private function fetchIP(): string
     {
         if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
             $addresses = explode(', ', $_SERVER['HTTP_X_FORWARDED_FOR']);
@@ -338,12 +342,111 @@ class Login
     /**
      * Transform clean SQL data to normal data
      */
-    private function setData(): void
+    private function translateData(): void
     {
         foreach ($this->db->data as $key => $value) {
             $this->data[$key] = $value;
         }
     }
-}
 
-/** End of File: Login.php **/
+    /**
+     * Setting the username
+     *
+     * @param string $username
+     */
+    public function setUsername(string $username): void
+    {
+        $this->data['username'] = $username;
+    }
+
+    /**
+     * Setting the e-mail address
+     *
+     * @param string $email
+     */
+    public function setEmail(string $email): void
+    {
+        $this->data['email'] = $email;
+    }
+
+    /**
+     * Setting the password
+     * Can only be used when creating a new user
+     * Changing the password of an existing user has to be done thought the function updatePassword()
+     *
+     * @param string $password
+     */
+    public function setPassword(string $password): void
+    {
+        $this->data['password'] = $password;
+    }
+
+    /**
+     * Get user's id
+     *
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->data['id'];
+    }
+
+    /**
+     * Get user's username
+     *
+     * @return string
+     */
+    public function getUsername(): string
+    {
+        return $this->data['username'];
+    }
+
+    /**
+     * Get user's e-mail address
+     *
+     * @return string
+     */
+    public function getEmail(): string
+    {
+        return $this->data['email'];
+    }
+
+    /**
+     * Get user's IP-address
+     *
+     * @return string
+     */
+    public function getIP(): string
+    {
+        return $this->fetchIP();
+    }
+
+    /**
+     * Set any other field from the table
+     *
+     * @param string $key
+     * @param mixed $value
+     * @return bool
+     */
+    public function setData(string $key, $value): bool
+    {
+        if ($key !== 'password' || $key !== 'salt' || $key !== 'remember_md') {
+            $this->data[$key] = $value;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Get any other field from the table
+     * Will return 'false' is key 'password', 'salt' or 'remember_me' is accessed
+     *
+     * @param string $key
+     * @return bool|mixed
+     */
+    public function getData(string $key)
+    {
+        return $key !== 'password' || $key !== 'salt' || $key !== 'remember_me' ? $this->data[$key] : false;
+    }
+}
