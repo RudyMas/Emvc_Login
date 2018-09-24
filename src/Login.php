@@ -27,7 +27,7 @@ use RudyMas\PDOExt\DBconnect;
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.1.0.42
+ * @version     4.1.1.43
  * @package     EasyMVC\Login
  */
 class Login
@@ -79,7 +79,7 @@ class Login
         if ($this->emailLogin) $query .= " OR email = {$this->db->cleanSQL($userLogin)}";
         $this->db->query($query);
         if ($this->db->rows != 0) {
-            $this->db->fetch(0);
+            $this->db->fetchRow(0);
             if (password_verify($password . $this->db->data['salt'], $this->db->data['password'])) {
                 setcookie('login', $userLogin, time() + (30 * 24 * 3600), '/');
                 if ($remember === true) {
@@ -124,7 +124,7 @@ class Login
             if ($this->emailLogin) $query .= " OR email = {$this->db->cleanSQL($userLogin)}";
             $this->db->query($query);
             if ($this->db->rows != 0) {
-                $this->db->fetch(0);
+                $this->db->fetchRow(0);
                 if (($remember) ? $password == $this->db->data['remember_me'] : password_verify($password, $this->db->data['password'])) {
                     if ($remember) $IP = $this->db->data['remember_me_ip'];
                     if ($IP == $this->fetchIP()) {
@@ -188,11 +188,11 @@ class Login
         $query = "SELECT COLUMN_NAME AS 'field'
                   FROM INFORMATION_SCHEMA.COLUMNS
                   WHERE TABLE_NAME = 'emvc_users'
-                    AND TABLE_SCHEMA = 'sc_sven'";
+                    AND TABLE_SCHEMA = (SELECT DATABASE())";
         $this->db->query($query);
         $numberOfFields = $this->db->rows;
         for ($x = 0; $x < $numberOfFields; $x++) {
-            $this->db->fetch($x);
+            $this->db->fetchRow($x);
             $nameField[$x] = $this->db->data['field'];
         }
 
