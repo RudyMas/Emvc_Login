@@ -171,7 +171,7 @@ class Login
         $this->data['salt'] = $this->text->randomText(32);
         $this->data['remember_me'] = '';
         $this->data['remember_me_ip'] = '';
-        if (!isset($this->data['access_level'])) $this->data['access_level'] = '';
+        if (!isset($this->data['access_level'])) $this->data['access_level'] = '99';
 
         $query = "SELECT id FROM emvc_users";
         if ($this->emailLogin) {
