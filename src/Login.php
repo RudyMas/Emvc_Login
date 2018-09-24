@@ -9,13 +9,14 @@ use RudyMas\PDOExt\DBconnect;
  * Class Login (Version PHP 7.1)
  *
  * In the MySQL table 'emvc_users' you only need to add 6 fixed fields:
- * - id             = int : Is the index for the table (auto_increment)
- * - username       = varchar(40)  : The login username
- * - email          = varchar(70)  : The login e-mail
- * - password       = varchar(255) : The login password (Hashed with SHA256)
- * - salt           = varchar(32)  : Used for extra security
- * - remember_me    = varchar(40)  : Special password to automatically login
- * - remember_me_ip = varchar(45)  : The IP from where the user can login automatically (Can be an IPv4 or IPv6 address)
+ * - id             = int(11)       : Is the index for the table (auto_increment)
+ * - username       = varchar(40)   : The login username
+ * - email          = varchar(70)   : The login e-mail
+ * - password       = varchar(255)  : The login password (Hashed with SHA256)
+ * - salt           = varchar(32)   : Used for extra security
+ * - remember_me    = varchar(40)   : Special password to automatically login
+ * - remember_me_ip = varchar(45)   : The IP from where the user can login automatically (Can be an IPv4 or IPv6 address)
+ * - access_level   = int(2)        : This can be used to setup levels of access to the website
  *
  * For security purposes, the users will only be able to automatically login as long as they are working with the same
  * IP-address. If the IP-address changes, the user needs to login again.
@@ -26,7 +27,7 @@ use RudyMas\PDOExt\DBconnect;
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.0.1.41
+ * @version     4.1.0.42
  * @package     EasyMVC\Login
  */
 class Login
@@ -170,6 +171,7 @@ class Login
         $this->data['salt'] = $this->text->randomText(32);
         $this->data['remember_me'] = '';
         $this->data['remember_me_ip'] = '';
+        if (!isset($this->data['access_level'])) $this->data['access_level'] = '';
 
         $query = "SELECT id FROM emvc_users";
         if ($this->emailLogin) {
@@ -382,6 +384,17 @@ class Login
     }
 
     /**
+     * Setting the access_level of the user
+     * This van be a number from 0 to 99
+     *
+     * @param int $accessLevel
+     */
+    public function setAccessLevel(int $accessLevel): void
+    {
+        $this->data['access_level'] = $accessLevel;
+    }
+
+    /**
      * Get user's id
      *
      * @return int
@@ -409,6 +422,11 @@ class Login
     public function getEmail(): string
     {
         return $this->data['email'];
+    }
+
+    public function getAccessLevel(): int
+    {
+        return $this->data['access_level'];
     }
 
     /**
