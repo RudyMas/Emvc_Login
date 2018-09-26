@@ -27,7 +27,7 @@ use RudyMas\PDOExt\DBconnect;
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.1.1.43
+ * @version     4.1.2.44
  * @package     EasyMVC\Login
  */
 class Login
@@ -411,7 +411,7 @@ class Login
      */
     public function getUsername(): string
     {
-        return $this->data['username'];
+        return (isset($this->data['username'])) ? $this->data['username'] : '';
     }
 
     /**
