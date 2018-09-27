@@ -27,7 +27,7 @@ use RudyMas\PDOExt\DBconnect;
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.1.2.44
+ * @version     4.1.3.45
  * @package     EasyMVC\Login
  */
 class Login
@@ -401,7 +401,7 @@ class Login
      */
     public function getId(): int
     {
-        return $this->data['id'];
+        return (isset($this->data['id'])) ? $this->data['id'] : 0;
     }
 
     /**
@@ -421,12 +421,12 @@ class Login
      */
     public function getEmail(): string
     {
-        return $this->data['email'];
+        return (isset($this->data['email'])) ? $this->data['email'] : '';
     }
 
     public function getAccessLevel(): int
     {
-        return $this->data['access_level'];
+        return (isset($this->data['access_level'])) ? $this->data['access_level'] : 99;
     }
 
     /**
@@ -465,6 +465,6 @@ class Login
      */
     public function getData(string $key)
     {
-        return $key !== 'password' || $key !== 'salt' || $key !== 'remember_me' ? $this->data[$key] : false;
+        return ($key !== 'password' || $key !== 'salt' || $key !== 'remember_me') ? $this->data[$key] : false;
     }
 }
