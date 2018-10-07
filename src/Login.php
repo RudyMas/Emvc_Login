@@ -27,7 +27,7 @@ use RudyMas\PDOExt\DBconnect;
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.1.4.46
+ * @version     4.1.5.47
  * @package     EasyMVC\Login
  */
 class Login
@@ -137,8 +137,7 @@ class Login
                         }
                         return true;
                     } else {
-                        $this->data = [];
-                        $this->logoutUser(true);
+                        $this->logoutUser();
                         ?>
                         <script type="text/javascript">
                             alert('You have been logged out by the system and need to login again.');
@@ -147,17 +146,14 @@ class Login
                         return false;
                     }
                 } else {
-                    $this->data = [];
                     $this->logoutUser();
                     return false;
                 }
             } else {
-                $this->data = [];
                 $this->logoutUser();
                 return false;
             }
         } else {
-            $this->data = [];
             $this->logoutUser();
             return false;
         }
