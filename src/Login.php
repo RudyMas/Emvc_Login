@@ -27,7 +27,7 @@ use RudyMas\PDOExt\DBconnect;
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.1.5.47
+ * @version     4.1.6.48
  * @package     EasyMVC\Login
  */
 class Login
@@ -127,7 +127,7 @@ class Login
                 $this->db->fetchRow(0);
                 if (($remember) ? $password == $this->db->data['remember_me'] : password_verify($password, $this->db->data['password'])) {
                     if ($remember) $IP = $this->db->data['remember_me_ip'];
-                    if ($IP == $this->fetchIP()) {
+                    if ($IP == ($fetchIP = $this->fetchIP())) {
                         if (password_needs_rehash($this->db->data['password'], PASSWORD_BCRYPT)) {
                             $this->db->data['password'] = password_hash($password, PASSWORD_BCRYPT);
                             $this->translateData();
@@ -137,13 +137,25 @@ class Login
                         }
                         return true;
                     } else {
-                        $this->logoutUser();
-                        ?>
-                        <script type="text/javascript">
-                            alert('You have been logged out by the system and need to login again.');
-                        </script>
-                        <?php
-                        return false;
+                        if (filter_var($IP, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) == filter_var($fetchIP, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6))
+                        {
+                            $this->logoutUser();
+                            ?>
+                            <script type="text/javascript">
+                                alert('You have been logged out by the system and need to login again.');
+                            </script>
+                            <?php
+                            return false;
+                        } else {
+                            if (password_needs_rehash($this->db->data['password'], PASSWORD_BCRYPT)) {
+                                $this->db->data['password'] = password_hash($password, PASSWORD_BCRYPT);
+                                $this->translateData();
+                                $this->updateUser();
+                            } else {
+                                $this->translateData();
+                            }
+                            return true;
+                        }
                     }
                 } else {
                     $this->logoutUser();
