@@ -15,7 +15,8 @@
   "require": {
     "php": ">= 7.1",
     "rudymas/pdo-ext": "^5",
-    "rudymas/manipulator": "^1"
+    "rudymas/manipulator": "^1",
+    "sonata-project/google-authenticator": "^2"
   },
   "autoload": {
     "classmap": [

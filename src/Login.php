@@ -4,6 +4,8 @@ namespace EasyMVC\Login;
 
 use RudyMas\Manipulator\Text;
 use RudyMas\PDOExt\DBconnect;
+use Sonata\GoogleAuthenticator\GoogleAuthenticator;
+use Sonata\GoogleAuthenticator\GoogleQrUrl;
 
 /**
  * Class Login (Version PHP 7.1)
@@ -17,6 +19,9 @@ use RudyMas\PDOExt\DBconnect;
  * - remember_me    = varchar(40)   : Special password to automatically login
  * - remember_me_ip = varchar(45)   : The IP from where the user can login automatically (Can be an IPv4 or IPv6 address)
  * - access_level   = int(2)        : This can be used to setup levels of access to the website
+ * - 2FA_active     = tinyint(1)    : Boolean to indicate if 2FA is active or not (Default = 0)
+ * - 2FA_key        = varchar(16)   : The key used for the 2FA
+ * - 2FA_token      = varchar(32)   : Token to check if user has successfully logged in with 2FA
  *
  * For security purposes, the users will only be able to automatically login as long as they are working with the same
  * IP-address. If the IP-address changes, the user needs to login again.
@@ -25,9 +30,9 @@ use RudyMas\PDOExt\DBconnect;
  * and changed by ->setData(<key>, <value>)
  *
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
- * @copyright   2016-2018, rmsoft.be. (http://www.rmsoft.be/)
+ * @copyright   2016-2019, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.1.6.48
+ * @version     4.2.0.49
  * @package     EasyMVC\Login
  */
 class Login
@@ -36,6 +41,7 @@ class Login
     private $db;
     private $text;
     private $emailLogin;
+    private $googleAuth;
     private $data = [];
 
     /**
@@ -49,6 +55,7 @@ class Login
         $this->db = $dbconnect;
         $this->text = $text;
         $this->emailLogin = $emailLogin;
+        $this->googleAuth = new GoogleAuthenticator();
     }
 
     /**
@@ -331,6 +338,41 @@ class Login
     }
 
     /**
+     * Creating the QR-code for Google 2FA
+     *
+     * @param string $userEmail
+     * @param string $secret
+     * @param string $issuer
+     * @return string
+     */
+    public function create2faQrUrl(string $userEmail, string $secret, string $issuer): string
+    {
+        return GoogleQrUrl::generate($userEmail, $secret, $issuer);
+    }
+
+    /**
+     * Check if the supplied code is correct
+     *
+     * @param string $secret
+     * @param string $code
+     * @return bool
+     */
+    public function check2faCode(string $secret, string $code): bool
+    {
+        return $this->googleAuth->checkCode($secret, $code);
+    }
+
+    /**
+     * Create secret key
+     *
+     * @return string
+     */
+    public function create2faSecret(): string
+    {
+        return $this->googleAuth->generateSecret();
+    }
+
+    /**
      * @return string
      */
     private function fetchIP(): string
@@ -406,6 +448,36 @@ class Login
     }
 
     /**
+     * Setting if 2FA is active or not
+     *
+     * @param bool $active
+     */
+    public function set2faActive(bool $active): void
+    {
+        $this->data['2FA_active'] = $active;
+    }
+
+    /**
+     * Setting the key for 2FA
+     *
+     * @param string $key
+     */
+    public function set2faKey(string $key): void
+    {
+        $this->data['2FA_key'] = $key;
+    }
+
+    /**
+     * Setting a new token for 2FA
+     *
+     * @return string
+     */
+    public function set2faToken(): string
+    {
+        return $this->data['2FA_token'] = $this->text->randomText(32);
+    }
+
+    /**
      * Get user's id
      *
      * @return int
@@ -435,9 +507,44 @@ class Login
         return (isset($this->data['email'])) ? $this->data['email'] : '';
     }
 
+    /**
+     * Get user's access level
+     *
+     * @return int
+     */
     public function getAccessLevel(): int
     {
         return (isset($this->data['access_level'])) ? $this->data['access_level'] : 99;
+    }
+
+    /**
+     * Get user's preference for 2FA
+     *
+     * @return bool
+     */
+    public function get2faActive(): bool
+    {
+        return (isset($this->data['2FA_active'])) ? $this->data['2FA_active'] : false;
+    }
+
+    /**
+     * Get user's secret key for 2FA
+     *
+     * @return string
+     */
+    public function get2faKey(): string
+    {
+        return (isset($this->data['2FA_key'])) ? $this->data['2FA_key'] : '';
+    }
+
+    /**
+     * Get user's token for 2FA
+     *
+     * @return string
+     */
+    public function get2faToken(): string
+    {
+        return (isset($this->data['2FA_token'])) ? $this->data['2FA_token'] : '';
     }
 
     /**
@@ -477,5 +584,16 @@ class Login
     public function getData(string $key)
     {
         return ($key !== 'password' || $key !== 'salt' || $key !== 'remember_me') ? $this->data[$key] : false;
+    }
+
+    /**
+     * Get code for the supplied secret key
+     *
+     * @param string $secret
+     * @return string
+     */
+    public function get2faCode(string $secret): string
+    {
+        return $this->googleAuth->getCode($secret);
     }
 }
