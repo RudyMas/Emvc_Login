@@ -1,6 +1,6 @@
 <?php
 
-namespace EasyMVC\Login;
+namespace EasyMVC;
 
 use RudyMas\Manipulator\Text;
 use RudyMas\PDOExt\DBconnect;
@@ -30,9 +30,9 @@ use Sonata\GoogleAuthenticator\GoogleQrUrl;
  * and changed by ->setData(<key>, <value>)
  *
  * @author      Rudy Mas <rudy.mas@rmsoft.be>
- * @copyright   2016-2019, rmsoft.be. (http://www.rmsoft.be/)
+ * @copyright   2016-2020, rmsoft.be. (http://www.rmsoft.be/)
  * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.2.0.49
+ * @version     4.2.0.50
  * @package     EasyMVC\Login
  */
 class Login
