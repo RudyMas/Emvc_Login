@@ -8,7 +8,7 @@ use Sonata\GoogleAuthenticator\GoogleAuthenticator;
 use Sonata\GoogleAuthenticator\GoogleQrUrl;
 
 /**
- * Class Login (Version PHP 7.1)
+ * Class Login (Version PHP 7.2)
  *
  * In the MySQL table 'emvc_users' you only need to add 6 fixed fields:
  * - id             = int(11)       : Is the index for the table (auto_increment)
@@ -29,11 +29,11 @@ use Sonata\GoogleAuthenticator\GoogleQrUrl;
  * You can add other fields to the table, and these can be accessed through ->getData(<key>)
  * and changed by ->setData(<key>, <value>)
  *
- * @author      Rudy Mas <rudy.mas@rmsoft.be>
- * @copyright   2016-2020, rmsoft.be. (http://www.rmsoft.be/)
- * @license     https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version     4.2.0.50
- * @package     EasyMVC\Login
+ * @author Rudy Mas <rudy.mas@rmsoft.be>
+ * @copyright 2016-2020, rmsoft.be. (http://www.rmsoft.be/)
+ * @license https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
+ * @version 4.2.1.0
+ * @package EasyMVC
  */
 class Login
 {
