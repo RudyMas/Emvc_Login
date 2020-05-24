@@ -3,7 +3,7 @@
 namespace EasyMVC;
 
 use RudyMas\Manipulator\Text;
-use RudyMas\PDOExt\DBconnect;
+use RudyMas\DBconnect;
 use Sonata\GoogleAuthenticator\GoogleAuthenticator;
 use Sonata\GoogleAuthenticator\GoogleQrUrl;
 
@@ -32,7 +32,7 @@ use Sonata\GoogleAuthenticator\GoogleQrUrl;
  * @author Rudy Mas <rudy.mas@rmsoft.be>
  * @copyright 2016-2020, rmsoft.be. (http://www.rmsoft.be/)
  * @license https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version 4.2.1.0
+ * @version 4.2.1.1
  * @package EasyMVC
  */
 class Login
