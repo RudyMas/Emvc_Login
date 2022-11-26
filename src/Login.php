@@ -8,7 +8,7 @@ use Sonata\GoogleAuthenticator\GoogleAuthenticator;
 use Sonata\GoogleAuthenticator\GoogleQrUrl;
 
 /**
- * Class Login (Version PHP 7.2)
+ * Class Login (Version PHP 8.1)
  *
  * In the MySQL table 'emvc_users' you only need to add 6 fixed fields:
  * - id             = int(11)       : Is the index for the table (auto_increment)
@@ -30,9 +30,9 @@ use Sonata\GoogleAuthenticator\GoogleQrUrl;
  * and changed by ->setData(<key>, <value>)
  *
  * @author Rudy Mas <rudy.mas@rmsoft.be>
- * @copyright 2016-2020, rmsoft.be. (http://www.rmsoft.be/)
+ * @copyright 2016-2022, rmsoft.be. (http://www.rmsoft.be/)
  * @license https://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3 (GPL-3.0)
- * @version 4.2.1.1
+ * @version 8.1.0.0
  * @package EasyMVC
  */
 class Login
@@ -84,7 +84,7 @@ class Login
                   FROM emvc_users
                   WHERE username = {$this->db->cleanSQL($userLogin)}";
         if ($this->emailLogin) $query .= " OR email = {$this->db->cleanSQL($userLogin)}";
-        $this->db->query($query);
+        $this->db->queryDB($query);
         if ($this->db->rows != 0) {
             $this->db->fetchRow(0);
             if (password_verify($password . $this->db->data['salt'], $this->db->data['password'])) {
@@ -129,7 +129,7 @@ class Login
                       FROM emvc_users
                       WHERE username = {$this->db->cleanSQL($userLogin)}";
             if ($this->emailLogin) $query .= " OR email = {$this->db->cleanSQL($userLogin)}";
-            $this->db->query($query);
+            $this->db->queryDB($query);
             if ($this->db->rows != 0) {
                 $this->db->fetchRow(0);
                 if (($remember) ? $password == $this->db->data['remember_me'] : password_verify($password, $this->db->data['password'])) {
@@ -197,7 +197,7 @@ class Login
         } else {
             $query .= " WHERE username = {$this->db->cleanSQL($this->data['username'])}";
         }
-        $this->db->query($query);
+        $this->db->queryDB($query);
         if ($this->db->rows != 0) {
             $this->errorCode = 9;
             return false;
@@ -207,7 +207,7 @@ class Login
                   FROM INFORMATION_SCHEMA.COLUMNS
                   WHERE TABLE_NAME = 'emvc_users'
                     AND TABLE_SCHEMA = (SELECT DATABASE())";
-        $this->db->query($query);
+        $this->db->queryDB($query);
         $numberOfFields = $this->db->rows;
         for ($x = 0; $x < $numberOfFields; $x++) {
             $this->db->fetchRow($x);
