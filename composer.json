@@ -13,7 +13,7 @@
   ],
   "minimum-stability": "stable",
   "require": {
-    "php": ">= 8.1",
+    "php": ">= 8.2",
     "rudymas/pdo-ext": "^8",
     "rudymas/manipulator": "^1",
     "sonata-project/google-authenticator": "^2"
